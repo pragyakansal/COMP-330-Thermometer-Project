@@ -1,2 +1,3 @@
-package PACKAGE_NAME;public class Sensor {
+package src;
+public class Sensor {
 }

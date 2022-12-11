@@ -1,3 +1,5 @@
+package src;
+
 import java.awt.*;
 import java.util.Random;
 
@@ -18,7 +20,7 @@ public class MockDisplay extends Display {
             System.out.print(" ".repeat(outString.length()));
         }
 
-        public void sendToScreen(DisplayArea[] displayAreas) {
+        public void updateScreen(DisplayArea[] displayAreas) {
             String outString = String.format(this.FORMAT_STRING,
                     displayAreas[0].getText(),
                     displayAreas[1].getText(),
@@ -52,10 +54,6 @@ public class MockDisplay extends Display {
 
         public void simulateButtonRelease(int n) {
             this.buttonStates[n] = false;
-        }
-
-        public void forceButtonState(int n, boolean state) {
-            this.buttonStates[n] = state;
         }
     }
 

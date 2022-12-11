@@ -21,7 +21,6 @@ public class Thermometer {
     public Thermometer() {
         this.input = 0;
         this.output = "";
-        this.display = new Display();
         this.sensor = new Sensor();
         this.isOn = false;
         this.maxTempReadingTime = 0;
@@ -34,6 +33,7 @@ public class Thermometer {
         this.validUnits[1] = 'F';
         this.timeToRun = 30000;
         this.thisThread = Thread.currentThread();
+        this.display = new MockDisplay();
     }
 
 
@@ -105,27 +105,6 @@ public class Thermometer {
 
     public static void main(String[] args) {
         Sensor sensor = new Sensor();
-        Display display = new MockDisplay();
-
-        /*
-        boolean isOn = powerOn(false);
-        display.getPowerButtonState();
-
-
-        String message = checkValidTemperatureRange(30.0, true);
-        display.updateErrorMessage(message);
-
-        boolean hasFever = feverChecker(40.0, true);
-        display.updateFeverIndicator(true);
-
-        char[] tempUnits = {'C', 'F'};
-        char unit = switchUnit(tempUnits);
-
-        display.updateUnit(unit);
-
-
-        isOn = powerOff(true);
-        display.getPowerButtonState(); */
 
         Thermometer thermometer = new Thermometer();
         thermometer.run(37.9f);
@@ -144,43 +123,42 @@ public class Thermometer {
         CountdownTimer countdownTimer = new CountdownTimer(30000);
         countdownTimer.start();
         boolean finished = false;
+        String errorMessage = null;
+        boolean hasFever = false;
         while (true) {
             finished = countdownTimer.isFinished();
             //call Sensor class and get recorded temperature
 
-            String message = checkValidTemperatureRange(userTemp, true);
-            if (message.equals(INVALID_TEMP_RANGE_MESSAGE)) {
-                display.updateErrorMessage(message);
-            } else {
-                display.updateTemp(userTemp);
-            }
+            errorMessage = checkValidTemperatureRange(userTemp, true);
+            hasFever = feverChecker(userTemp, true);
 
-
-
-            boolean hasFever = feverChecker(userTemp, true);
-            display.updateFeverIndicator(hasFever);
-
+            /*
             switchUnit('F');
-            float temp = celsiusToFahrenheit(userTemp);
+            float temp = celsiusToFahrenheit(userTemp); */
 
             if (finished) {
                 break;
             }
         }
-        if (userTemp == null || userTemp.floatValue() == 0) {
-            display.updateErrorMessage("Temperature could not be recorded");
-            display.recieveAlert();
+
+
+        if (finished) {
+            if (errorMessage != null && errorMessage.equals(INVALID_TEMP_RANGE_MESSAGE)) {
+                display.updateErrorMessage(errorMessage);
+            } else if (userTemp.floatValue() > 0) {
+                display.updateTemp(userTemp);
+                display.updateFeverIndicator(hasFever);
+            } else if (userTemp == null || userTemp.floatValue() == 0) {
+                display.updateErrorMessage("Temperature could not be recorded");
+                display.recieveAlert();
+            }
         }
 
         System.out.println("Finished: " + finished);
-
-
-
         ((MockDisplay.SimulatedButtonSet) display.buttonSet).simulateButtonPress(0);
         if (display.getPowerButtonState()) {
             powerOff();
         }
-
 
         /*
         String message = checkValidTemperatureRange(userTemp, true);

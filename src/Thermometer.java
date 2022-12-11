@@ -2,6 +2,7 @@
 
 package src;
 
+import java.util.Arrays;
 import java.util.Random;
 
 
@@ -14,7 +15,7 @@ public class Thermometer {
     private int maxTempReadingTime;
     private double minTemp;
     private double maxTemp;
-    private char displayUnit;
+    private int displayUnitIndex;
     private char[] validUnits = new char[2];
     private boolean isTempReadingSuccessful;
     private int timeToRun;
@@ -35,7 +36,7 @@ public class Thermometer {
         this.timeToRun = 30000;
         this.thisThread = Thread.currentThread();
         this.display = new MockDisplay();
-        this.displayUnit = 'C';
+        this.displayUnitIndex = 0;
     }
 
     // setters and getters
@@ -55,13 +56,13 @@ public class Thermometer {
         return this.output;
     }
 
-    public void setDisplayUnit(char displayUnit) {
-        this.displayUnit = displayUnit;
+    public void setDisplayUnitIndex(int displayUnit) {
+        this.displayUnitIndex = displayUnitIndex;
 
     }
 
-    public char getDisplayUnit() {
-        return this.displayUnit;
+    public int getDisplayUnitIndex() {
+        return this.displayUnitIndex;
 
     }
 
@@ -113,8 +114,8 @@ public class Thermometer {
         Thermometer thermometer = new Thermometer();
         try {
 
-            char unit = thermometer.switchUnit('C');
-            thermometer.run(20.1f, true, getRandomFloatNumber(1.0f, 5.0f), unit);
+            int unitIndex = thermometer.switchUnit(0);
+            thermometer.run(20.1f, true, getRandomFloatNumber(1.0f, 5.0f), unitIndex);
             /* unit = thermometer.switchUnit('C');
             thermometer.run(37.9f, true, getRandomFloatNumber(1.0f, 5.0f), unit);
             unit = thermometer.switchUnit('C');
@@ -130,7 +131,33 @@ public class Thermometer {
         }
     }
 
-    public void run(Float userTemp, boolean isCelsius, float batteryLevel, char tempUnit) throws InterruptedException {
+    public void run() throws InterruptedException {
+        // run until the user hits the power button or the display runs out of battery
+        while (!display.getPowerButtonState() && display.getBatteryLevel() > 0f) {
+            CountdownTimer timer = new CountdownTimer(30000);
+            timer.start();
+            while (!timer.isFinished()) {
+                try {
+                    float temp = this.sensor.getTemp();
+                    char unit = (this.display.getDataButtonState()) ?
+                            this.validUnits[(this.displayUnitIndex + 1) % this.validUnits.length] :
+                            this.validUnits[this.displayUnitIndex];
+                    String errorMessage = checkValidTemperatureRange(temp, true);
+                    boolean hasFever = feverChecker(temp, true);
+                    this.display.updateTemp(temp);
+                    this.display.updateUnit(unit);
+                    this.display.updateErrorMessage(errorMessage);
+                    this.display.updateFeverIndicator(hasFever);
+                } catch (Exception e) {
+                    String errorMessage = e.getMessage();
+                    this.display.updateErrorMessage(errorMessage);
+                }
+                Thread.sleep(1000);
+            }
+        }
+    }
+
+    public void run(Float userTemp, boolean isCelsius, float batteryLevel, int tempUnitIndex) throws InterruptedException {
         ((MockDisplay.SimulatedButtonSet) display.buttonSet).simulateButtonPress(1);
         if (display.getPowerButtonState()) {
             powerOn();
@@ -264,14 +291,14 @@ public class Thermometer {
         return this.isOn;
     }
 
-    public char switchUnit(char tempUnit) {
-        if (tempUnit == this.displayUnit) {
-            display.updateUnit(tempUnit);
-            return tempUnit;
+    public int switchUnit(int tempUnitIndex) {
+        if (tempUnitIndex == this.displayUnitIndex) {
+            display.updateUnit(this.validUnits[tempUnitIndex]);
+            return tempUnitIndex;
         }
-        this.displayUnit = tempUnit;
-        display.updateUnit(tempUnit);
-        return tempUnit;
+        this.displayUnitIndex = tempUnitIndex;
+        display.updateUnit(this.validUnits[this.displayUnitIndex]);
+        return tempUnitIndex;
     }
 
     public static float celsiusToFahrenheit(float input) {

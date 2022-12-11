@@ -64,7 +64,7 @@ public class ThermometerTest {
 
     @Test
     public void testCheckValidTemperatureRangeCelsiusLow() {
-        float tempInCelsius = 30.0f;
+        float tempInCelsius = 20.0f;
         boolean isCelsius = true;
         String expectedResult = "Temperature reading outside of valid range. Please try again.";
         String actualResult = Thermometer.checkValidTemperatureRange(tempInCelsius, isCelsius);

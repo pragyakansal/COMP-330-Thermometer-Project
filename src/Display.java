@@ -14,7 +14,7 @@ public class Display {
     final int DEFAULT_BATTERY_DISPLAY_AREA_SIZE = 4;
     final int DEFAULT_TEMP_DISPLAY_AREA_SIZE = 5;
     final int DEFAULT_UNIT_DISPLAY_AREA_SIZE = 2;
-    final int DEFAULT_ERRORS_DISPLAY_AREA_SIZE = 32;
+    final int DEFAULT_ERRORS_DISPLAY_AREA_SIZE = 43;
     final int DEFAULT_FEVER_DISPLAY_AREA_SIZE = 1;
     final int DEFAULT_BUTTON_COUNT = 2;
     final int DEFAULT_POWER_BUTTON_INDEX = 0;

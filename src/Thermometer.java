@@ -1,6 +1,9 @@
+
+
 package src;
 
 import java.util.Random;
+
 
 public class Thermometer {
     private float input;
@@ -13,8 +16,6 @@ public class Thermometer {
     private double maxTemp;
     private char displayUnit;
     private char[] validUnits = new char[2];
-    private boolean hasFever;
-    private boolean isCelsius;
     private boolean isTempReadingSuccessful;
     private int timeToRun;
     private Thread thisThread;
@@ -28,16 +29,14 @@ public class Thermometer {
         this.maxTempReadingTime = 0;
         this.minTemp = 0.0;
         this.maxTemp = 0.0;
-        this.hasFever = false;
-        this.isCelsius = false;
         this.isTempReadingSuccessful = false;
         this.validUnits[0] = 'C';
         this.validUnits[1] = 'F';
         this.timeToRun = 30000;
         this.thisThread = Thread.currentThread();
         this.display = new MockDisplay();
+        this.displayUnit = 'C';
     }
-
 
     // setters and getters
     public void setInput(float input) {
@@ -58,22 +57,27 @@ public class Thermometer {
 
     public void setDisplayUnit(char displayUnit) {
         this.displayUnit = displayUnit;
+
     }
 
     public char getDisplayUnit() {
         return this.displayUnit;
+
     }
 
     public void setMaxTempReadingTime(int maxTempReadingTime){
         this.maxTempReadingTime = maxTempReadingTime;
+
     }
 
     public int getMaxTempReadingTime() {
         return this.getMaxTempReadingTime();
     }
 
+
     public void setMinTemp(double minTemp) {
         this.minTemp = minTemp;
+
     }
 
     public double getMinTemp() {
@@ -104,81 +108,95 @@ public class Thermometer {
         return this.sensor;
     }
 
-
     public static void main(String[] args) {
         Sensor sensor = new Sensor();
-
         Thermometer thermometer = new Thermometer();
-        thermometer.run(37.9f);
+        try {
 
+            char unit = thermometer.switchUnit('C');
+            thermometer.run(20.1f, true, getRandomFloatNumber(1.0f, 5.0f), unit);
+            /* unit = thermometer.switchUnit('C');
+            thermometer.run(37.9f, true, getRandomFloatNumber(1.0f, 5.0f), unit);
+            unit = thermometer.switchUnit('C');
+            thermometer.run(40.5f, true, getRandomFloatNumber(1.0f, 5.0f), unit);
+            char unit = thermometer.switchUnit('F');
+            thermometer.run(98.4f, false, getRandomFloatNumber(1.0f, 5.0f), unit);
+            unit = thermometer.switchUnit('F');
+            thermometer.run(100.5f, false, getRandomFloatNumber(1.0f, 5.0f), unit);
+            unit = thermometer.switchUnit('F');
+            thermometer.run(130.5f, false, getRandomFloatNumber(1.0f, 5.0f), unit); */
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
-    public void run(Float userTemp) {
-
+    public void run(Float userTemp, boolean isCelsius, float batteryLevel, char tempUnit) throws InterruptedException {
         ((MockDisplay.SimulatedButtonSet) display.buttonSet).simulateButtonPress(1);
         if (display.getPowerButtonState()) {
             powerOn();
         }
-
-        //boolean state = display.getPowerButtonState();
-
         CountdownTimer countdownTimer = new CountdownTimer(30000);
         countdownTimer.start();
         boolean finished = false;
         String errorMessage = null;
         boolean hasFever = false;
         while (true) {
+            hasFever = false;
             finished = countdownTimer.isFinished();
             //call Sensor class and get recorded temperature
+            // Simulating the time lag to record the temperature
+            int randomInt = getRandomNumber(1, 29);
+            long randomTimeInMillis = randomInt * 1000;
+            System.out.println ("Waiting for: " + randomTimeInMillis + " ms to record the temperature");
+            display.updateBatteryLevel();
+            display.incrementBatteryLevel(-0.1f);
+            Thread.sleep(randomTimeInMillis);
+            errorMessage = checkValidTemperatureRange(userTemp, isCelsius);
+            hasFever = feverChecker(userTemp, isCelsius);
 
-            errorMessage = checkValidTemperatureRange(userTemp, true);
-            hasFever = feverChecker(userTemp, true);
-
-            /*
-            switchUnit('F');
-            float temp = celsiusToFahrenheit(userTemp); */
-
+            if (errorMessage != null && errorMessage.equals(INVALID_TEMP_RANGE_MESSAGE)) {
+                display.updateTemp(userTemp);
+                display.updateErrorMessage(errorMessage);
+                this.isTempReadingSuccessful = false;
+                break;
+            } else if (userTemp.floatValue() > 0.00) {
+                display.updateTemp(userTemp);
+                System.out.println("\n");
+                if (hasFever) {
+                    display.updateFeverIndicator(hasFever);
+                }
+                this.isTempReadingSuccessful = true;
+                break;
+            }
             if (finished) {
                 break;
             }
         }
 
-
         if (finished) {
-            if (errorMessage != null && errorMessage.equals(INVALID_TEMP_RANGE_MESSAGE)) {
-                display.updateErrorMessage(errorMessage);
-            } else if (userTemp.floatValue() > 0) {
-                display.updateTemp(userTemp);
-                display.updateFeverIndicator(hasFever);
-            } else if (userTemp == null || userTemp.floatValue() == 0) {
+            if (userTemp == null || userTemp.floatValue() == 0) {
                 display.updateErrorMessage("Temperature could not be recorded");
+                this.isTempReadingSuccessful = false;
                 display.recieveAlert();
             }
         }
-
-        System.out.println("Finished: " + finished);
+        // System.out.println("Finished: " + finished);
         ((MockDisplay.SimulatedButtonSet) display.buttonSet).simulateButtonPress(0);
         if (display.getPowerButtonState()) {
             powerOff();
         }
+    }
+    public int getRandomNumber(int min, int max) {
+        return (int) ((Math.random() * (max - min)) + min);
+    }
 
-        /*
-        String message = checkValidTemperatureRange(userTemp, true);
-        display.updateErrorMessage(message);
-
-        boolean hasFever = feverChecker(userTemp, true);
-        display.updateFeverIndicator(hasFever);
-
-        switchUnit('F');
-        double temp = celsiusToFahrenheit(userTemp); */
-
-
+    public static float getRandomFloatNumber(float min, float max) {
+        return (int) ((Math.random() * (max - min)) + min);
     }
 
 
     public class CountdownTimerThread extends Thread {
         private long time;
-
         /** Create a new timer */
         public CountdownTimerThread(long time) {
             this.time = time;
@@ -192,48 +210,42 @@ public class Thermometer {
             try {
                 sleep(this.time);
             } catch (InterruptedException e) {
-
             }
         }
     }
 
-
     public class CountdownTimer extends Thread {
         /* Countdown timer */
         private CountdownTimerThread timer;
-
         /**
-          * Creates a new timer and sets time to count down
-          * @param time
-          *          Time to count down
-          */
+         * Creates a new timer and sets time to count down
+         * @param time
+         *          Time to count down
+         */
+
         public CountdownTimer(long time) {
             this.timer = new CountdownTimerThread(time);
         }
-
         public void run() {
             this.timer.start();
         }
-
         /**
-          * @return
-          *      False if timer is running, else true
-          */
+         * @return
+         *      False if timer is running, else true
+         */
         public boolean isFinished() {
             if(this.timer.getState() == Thread.State.TERMINATED) {
-                System.out.println("Thread is running");
                 return true;
             }
             return false;
         }
     }
 
-
-
     public boolean powerOn() {
         if (this.isOn) {
             return true;
         }
+
         display.recieveAlert();
         this.isOn = true;
         display.updateTemp(0.0f);
@@ -252,12 +264,15 @@ public class Thermometer {
         return this.isOn;
     }
 
-
-    public void switchUnit(char currentTempUnit) {
-        display.updateUnit(currentTempUnit);
+    public char switchUnit(char tempUnit) {
+        if (tempUnit == this.displayUnit) {
+            display.updateUnit(tempUnit);
+            return tempUnit;
+        }
+        this.displayUnit = tempUnit;
+        display.updateUnit(tempUnit);
+        return tempUnit;
     }
-
-
 
     public static float celsiusToFahrenheit(float input) {
         return (input * 9/5) + 32;
@@ -267,40 +282,29 @@ public class Thermometer {
         return (input - 32) * (5/9);
     }
 
-
     public static boolean feverChecker(float input, boolean isCelsius) {
+        if (input <= 0f || input <= 0.0f || input <= 0.00f) {
+            return false;
+        }
         if (isCelsius) {
-            return (input >= 37.8);
+            return (input >= 37.8f);
         } else {
-            return (input >= 99.5);
+            return (input >= 99.5f);
         }
     }
 
-
     public static String checkValidTemperatureRange(float input, boolean isCelsius) {
-        if (isCelsius && ( input > 0 && (input < 28.0 || input > 38.0))) {
+        if (isCelsius && ((input > 0f || input > 0.0f || input > 0.00f) && (input < 28.0f || input > 38.0f))) {
             return "Temperature reading outside of valid range. Please try again.";
-        } else if (!isCelsius && ( input > 0 && (input < 88.0 || input > 108.0))) {
+        } else if (!isCelsius && ((input > 0f || input > 0.0f || input > 0.00f) && (input < 88.0f || input > 108.0f))) {
             return "Temperature reading outside of valid range. Please try again.";
         } else {
             return "Temperature reading in range.";
         }
     }
 
-
-    /* public boolean makeBeepingSound(boolean isTempReadingSuccessful) {
-        if (isTempReadingSuccessful) {
-
-        }
-    } */
-
-
-
-   /* public String sendError(float input, int maxTempReadingTime) {
-        if (maxTempReadingTime == 60) {
-            return "Temperature could not be read successfully. Please try again.";
-        }
-    } */
-
-
 }
+
+
+
+

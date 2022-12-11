@@ -133,17 +133,10 @@ public class ThermometerTest {
     }
 
 
-    /*
     @Test
     public void testSwitchUnit() {
-        char currentTempUnit = 'F';
-        char expectedResult = 'C';
-        char[] tempUnits = {'C', 'F'};
-        char actualResult = Thermometer.switchUnit(tempUnits);
-        assertEquals(expectedResult, actualResult);
 
-    } */
-
+    }
 
 
 

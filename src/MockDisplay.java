@@ -5,7 +5,7 @@ import java.util.Random;
 
 public class MockDisplay extends Display {
 
-    private static class ConsoleScreen implements Screen, SoundChip {
+    public static class ConsoleScreen implements Screen, SoundChip {
 
         private final String FORMAT_STRING = "Battery: [%s] Temp: [%s][%s] Errors: [%s] Fever: [%s]";
 
@@ -37,7 +37,7 @@ public class MockDisplay extends Display {
         }
     }
 
-    private static class SimulatedButtonSet implements ButtonSet {
+    public static class SimulatedButtonSet implements ButtonSet {
         private final boolean[] buttonStates;
 
         public SimulatedButtonSet(int buttonCount) {

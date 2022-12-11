@@ -35,11 +35,12 @@ public class Display {
     ButtonSet buttonSet;
     static class DisplayArea {
         private final char FILL_CHAR = ' ';
+        private final int DEFAULT_SIZE = 16;
         private final char[] currentText;
         private final int size;
 
         public DisplayArea() {
-            this.size = 16;
+            this.size = this.DEFAULT_SIZE;
             this.currentText = new char[this.size];
             Arrays.fill(this.currentText, this.FILL_CHAR);
         }
@@ -83,7 +84,7 @@ public class Display {
     }
 
     public Display(){
-        this.batteryLevel = 1.0f;
+        this.batteryLevel = this.BATTERY_LEVEL_MAX;
         this.screenDisplayAreas = new DisplayArea[this.DEFAULT_SCREEN_DISPLAY_AREAS_COUNT];
         this.batteryDisplayAreaIndex = this.DEFAULT_BATTERY_DISPLAY_AREA_INDEX;
         this.tempDisplayAreaIndex = this.DEFAULT_TEMP_DISPLAY_AREA_INDEX;
@@ -153,7 +154,7 @@ public class Display {
     }
 
     public void recieveAlert() {
-        Toolkit.getDefaultToolkit().beep();
+        this.soundChip.beep();
     }
 
     public boolean getPowerButtonState() {

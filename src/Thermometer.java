@@ -12,12 +12,8 @@ public class Thermometer {
     private Display display;
     private Sensor sensor;
     private boolean isOn;
-    private int maxTempReadingTime;
-    private double minTemp;
-    private double maxTemp;
     private int displayUnitIndex;
     private char[] validUnits = new char[2];
-    private boolean isTempReadingSuccessful;
     private int timeToRun;
     private Thread thisThread;
     public static final String INVALID_TEMP_RANGE_MESSAGE = "Temperature reading outside of valid range. Please try again.";
@@ -27,10 +23,6 @@ public class Thermometer {
         this.output = "";
         this.sensor = new Sensor();
         this.isOn = false;
-        this.maxTempReadingTime = 0;
-        this.minTemp = 0.0;
-        this.maxTemp = 0.0;
-        this.isTempReadingSuccessful = false;
         this.validUnits[0] = 'C';
         this.validUnits[1] = 'F';
         this.timeToRun = 30000;
@@ -66,32 +58,6 @@ public class Thermometer {
 
     }
 
-    public void setMaxTempReadingTime(int maxTempReadingTime){
-        this.maxTempReadingTime = maxTempReadingTime;
-
-    }
-
-    public int getMaxTempReadingTime() {
-        return this.getMaxTempReadingTime();
-    }
-
-
-    public void setMinTemp(double minTemp) {
-        this.minTemp = minTemp;
-
-    }
-
-    public double getMinTemp() {
-        return this.minTemp;
-    }
-
-    public void setMaxTemp(double maxTemp) {
-        this.maxTemp = maxTemp;
-    }
-
-    public double getMaxTemp() {
-        return this.maxTemp;
-    }
 
     public void setDisplay(Display display) {
         this.display = display;
@@ -184,7 +150,6 @@ public class Thermometer {
             if (errorMessage != null && errorMessage.equals(INVALID_TEMP_RANGE_MESSAGE)) {
                 display.updateTemp(userTemp);
                 display.updateErrorMessage(errorMessage);
-                this.isTempReadingSuccessful = false;
                 break;
             } else if (userTemp.floatValue() > 0.00) {
                 display.updateTemp(userTemp);
@@ -192,7 +157,6 @@ public class Thermometer {
                 if (hasFever) {
                     display.updateFeverIndicator(hasFever);
                 }
-                this.isTempReadingSuccessful = true;
                 break;
             }
             if (finished) {
@@ -203,7 +167,6 @@ public class Thermometer {
         if (finished) {
             if (userTemp == null || userTemp.floatValue() == 0) {
                 display.updateErrorMessage("Temperature could not be recorded");
-                this.isTempReadingSuccessful = false;
                 display.recieveAlert();
             }
         }
